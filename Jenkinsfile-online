@@ -14,9 +14,10 @@ pipeline {
         GITHUB_CREDENTIAL_ID = 'github-id'
         KUBECONFIG_CREDENTIAL_ID = 'demo-kubeconfig'
         REGISTRY = 'docker.io'
-        DOCKERHUB_NAMESPACE = 'docker_username'
-        GITHUB_ACCOUNT = 'kubesphere'
+        DOCKERHUB_NAMESPACE = '18779920015'
+        GITHUB_ACCOUNT = '2376306355@qq.com'
         APP_NAME = 'devops-java-sample'
+        SONAR_CREDENTIAL_ID = 'sonar-qube'
     }
 
     stages {
@@ -25,7 +26,20 @@ pipeline {
                 checkout(scm)
             }
         }
-
+  stage('sonarqube analysis') {
+          steps {
+            container ('maven') {
+              withCredentials([string(credentialsId: "$SONAR_CREDENTIAL_ID", variable: 'SONAR_TOKEN')]) {
+                withSonarQubeEnv('sonar') {
+                 sh "mvn sonar:sonar -gs `pwd`/configuration/settings.xml -Dsonar.branch=$BRANCH_NAME -Dsonar.login=$SONAR_TOKEN"
+                }
+              }
+              timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+              }
+            }
+          }
+        }
         stage ('unit test') {
             steps {
                 container ('maven') {
