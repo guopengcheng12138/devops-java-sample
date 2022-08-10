@@ -26,7 +26,15 @@ pipeline {
                 checkout(scm)
             }
         }
-  stage('sonarqube analysis') {
+
+        stage ('unit test') {
+            steps {
+                container ('maven') {
+                    sh 'mvn clean  -gs `pwd`/configuration/settings.xml test'
+                }
+            }
+        }
+          stage('sonarqube analysis') {
           steps {
             container ('maven') {
               withCredentials([string(credentialsId: "$SONAR_CREDENTIAL_ID", variable: 'SONAR_TOKEN')]) {
@@ -39,13 +47,6 @@ pipeline {
               }
             }
           }
-        }
-        stage ('unit test') {
-            steps {
-                container ('maven') {
-                    sh 'mvn clean  -gs `pwd`/configuration/settings.xml test'
-                }
-            }
         }
  
         stage ('build & push') {
